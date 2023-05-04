@@ -2,7 +2,7 @@
  * @description:
  */
 // Modules to control application life and create native browser window
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, Menu } = require("electron");
 const path = require("path");
 const AnyProxy = require("anyproxy");
 const serve = require("electron-serve");
@@ -43,6 +43,7 @@ function proxy() {
 }
 
 function createWindow() {
+  Menu.setApplicationMenu(null);
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -92,6 +93,7 @@ function createWindow() {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", () => {
+  AnyProxy.utils.systemProxyMgr.enableGlobalProxy("127.0.0.1", "8001");
   proxy();
   createWindow();
 });
@@ -101,9 +103,11 @@ app.on("window-all-closed", function () {
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== "darwin") {
-    ProxyServer.close();
     app.quit();
   }
+  ProxyServer.close();
+  // 关闭全局代理服务器
+  AnyProxy.utils.systemProxyMgr.disableGlobalProxy();
 });
 
 app.on("activate", function () {
